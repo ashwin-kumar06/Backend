@@ -141,7 +141,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("forgotpassword")]
-        public IActionResult GenerateOTP(string email)
+        public IActionResult GenerateOTP([FromQuery] string email)
         {
             string[] saAllowedCharacters = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
             string sOTP = String.Empty;
