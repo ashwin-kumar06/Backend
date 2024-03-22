@@ -51,6 +51,33 @@ namespace Backend.Migrations
                     b.ToTable("Bid");
                 });
 
+            modelBuilder.Entity("Backend.Models.PersonalDetails", b =>
+                {
+                    b.Property<int>("PersonId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("PersonId"));
+
+                    b.Property<string>("Aadhar")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("longtext");
+
+                    b.Property<long>("MobileNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PersonId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PersonalDetails");
+                });
+
             modelBuilder.Entity("Backend.Models.Products", b =>
                 {
                     b.Property<int>("ProductId")
@@ -58,9 +85,6 @@ namespace Backend.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ProductId"));
-
-                    b.Property<int>("AuctionDuration")
-                        .HasColumnType("int");
 
                     b.Property<string>("Category")
                         .HasColumnType("longtext");
@@ -71,13 +95,28 @@ namespace Backend.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("EndingDate")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("longtext");
+
                     b.Property<int>("SellerId")
                         .HasColumnType("int");
+
+                    b.Property<string>("StartingDate")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("StartingPrice")
                         .HasColumnType("int");
 
+                    b.Property<string>("Status")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Title")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Video")
                         .HasColumnType("longtext");
 
                     b.HasKey("ProductId");
@@ -85,32 +124,6 @@ namespace Backend.Migrations
                     b.HasIndex("SellerId");
 
                     b.ToTable("Products");
-                });
-
-            modelBuilder.Entity("Backend.Models.Report", b =>
-                {
-                    b.Property<int>("ReportId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ReportId"));
-
-                    b.Property<int>("BidId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ReportId");
-
-                    b.HasIndex("BidId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Report");
                 });
 
             modelBuilder.Entity("Backend.Models.Users", b =>
@@ -126,7 +139,6 @@ namespace Backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("UserId");
@@ -137,7 +149,7 @@ namespace Backend.Migrations
             modelBuilder.Entity("Backend.Models.Bid", b =>
                 {
                     b.HasOne("Backend.Models.Users", "Users")
-                        .WithMany("Bids")
+                        .WithMany()
                         .HasForeignKey("BidderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -153,43 +165,26 @@ namespace Backend.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("Backend.Models.PersonalDetails", b =>
+                {
+                    b.HasOne("Backend.Models.Users", "Users")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Users");
+                });
+
             modelBuilder.Entity("Backend.Models.Products", b =>
                 {
                     b.HasOne("Backend.Models.Users", "Users")
-                        .WithMany("Products")
+                        .WithMany()
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("Backend.Models.Report", b =>
-                {
-                    b.HasOne("Backend.Models.Bid", "Bid")
-                        .WithMany()
-                        .HasForeignKey("BidId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Models.Users", "Users")
-                        .WithMany("Reports")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Bid");
-
-                    b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("Backend.Models.Users", b =>
-                {
-                    b.Navigation("Bids");
-
-                    b.Navigation("Products");
-
-                    b.Navigation("Reports");
                 });
 #pragma warning restore 612, 618
         }
