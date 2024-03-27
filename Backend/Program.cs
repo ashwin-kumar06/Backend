@@ -1,32 +1,93 @@
+
+
 using Backend.Data;
-using Microsoft.EntityFrameworkCore;
+
 using Backend.Models;
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
-builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"), new MySqlServerVersion(new Version())));
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+using Microsoft.EntityFrameworkCore;
 
-builder.Services.AddCors(options =>
+using Microsoft.OpenApi.Models;
+
+using Microsoft.AspNetCore.Http;
+
+
+
+var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(connectionString, new MySqlServerVersion(new Version())));
+
+builder.Services.AddControllers();
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(c =>
+
 {
-    options.AddPolicy("AllowFrontend",
-        builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API Name", Version = "v1" });
+
 });
 
+
+
+builder.Services.AddCors(options =>
+
+{
+
+    options.AddPolicy("AllowFrontend",
+
+        builder => builder
+
+            .AllowAnyOrigin()
+
+            .AllowAnyMethod()
+
+            .AllowAnyHeader());
+
+});
+
+
+
 builder.Services.AddAuthorization();
+
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
+
+
+// Add IHttpContextAccessor service 
+
+builder.Services.AddHttpContextAccessor();
+
+
+
 var app = builder.Build();
-// Configure the HTTP request pipeline.
+
+
+
 if (app.Environment.IsDevelopment())
+
 {
+
+    app.UseDeveloperExceptionPage();
+
     app.UseSwagger();
-    app.UseSwaggerUI();
+
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API Name v1"));
+
 }
 
+
+
+app.UseHttpsRedirection();
+
 app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
+
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();

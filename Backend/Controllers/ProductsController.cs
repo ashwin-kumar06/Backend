@@ -1,11 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Data;
 using Backend.Models;
-using System.IO;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using System;
+using System.Reflection;
+using Microsoft.Extensions.Hosting;
 
 namespace Backend.Controllers
 {
@@ -14,20 +19,57 @@ namespace Backend.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _configuration;
 
-        public ProductsController(AppDbContext context, IWebHostEnvironment webHostEnvironment)
+        public ProductsController(AppDbContext context, IWebHostEnvironment environment, IConfiguration configuration)
         {
             _context = context;
-            _webHostEnvironment = webHostEnvironment;
+            _environment = environment;
+            _configuration = configuration;
         }
 
+        [HttpGet("BySeller/{sellerId}")]
+        public async Task<ActionResult<IEnumerable<Products>>> GetBySellerId(int sellerId)
+        {
+            var products = await _context.Products.Where(p => p.SellerId == sellerId).ToListAsync();
+            if (products == null || products.Count == 0)
+            {
+                return NotFound();
+            }
+            return products;
+        }
+
+        // GET: api/Products
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Products>>> GetProducts()
         {
             return await _context.Products.ToListAsync();
         }
 
+        [HttpGet("{id}/Image")]
+        public IActionResult GetImage(int id)
+        {
+            var product = _context.Products.Find(id);
+            if (product == null)
+            {
+                return NotFound(); // User not found
+            }
+
+            // Construct the full path to the image file
+            var imagePath = Path.Combine(_environment.WebRootPath, "images", product.Image);
+
+            // Check if the image file exists
+            if (!System.IO.File.Exists(imagePath))
+            {
+                return NotFound(); // Image file not found
+            }
+
+            // Serve the image file
+            return PhysicalFile(imagePath, "image/jpeg");
+        }
+
+        // GET: api/Products/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Products>> GetProducts(int id)
         {
@@ -41,6 +83,43 @@ namespace Backend.Controllers
             return products;
         }
 
+        // PUT: api/Products/PrductStatus/5
+        [HttpPut("ProductStatus/{productId}")]
+        public async Task<IActionResult> PutByProductId(int productId)
+        {
+            var product = await _context.Products.FirstOrDefaultAsync(b => b.ProductId == productId);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            product.Status = "Close";
+            _context.Entry(product).State = EntityState.Modified;
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductExists(product.ProductId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        private bool ProductExists(int productId)
+        {
+            return _context.Products.Any(b => b.ProductId == productId);
+        }
+
+        // PUT: api/Products/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProducts(int id, Products products)
         {
@@ -70,17 +149,24 @@ namespace Backend.Controllers
             return NoContent();
         }
 
+        // POST: api/Products
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Products>> PostProducts(int userId,[FromForm] Products products)
+        public async Task<ActionResult<Products>> PostProducts(int userId, [FromForm] Products products, [FromServices] IHttpContextAccessor httpContextAccessor)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
             {
                 return NotFound("User not found");
             }
-            var imagePath = await SaveFile(products.ImagePath);
-            var videoPath = await SaveFile(products.VideoPath);
-
+            var image = $"{Guid.NewGuid()}_{products.ImagePath.FileName}";
+            var imageuploadsFolder = Path.Combine(_environment.WebRootPath, "images");
+            var imagefilePath = Path.Combine(imageuploadsFolder, image);
+            using (var stream = new FileStream(imagefilePath, FileMode.Create))
+            {
+                await products.ImagePath.CopyToAsync(stream);
+            }
+            var today = DateTime.Now.ToString("M/d/yyyy");
             var product = new Products
             {
                 Title = products.Title,
@@ -88,37 +174,19 @@ namespace Backend.Controllers
                 Category = products.Category,
                 Condition = products.Condition,
                 StartingPrice = products.StartingPrice,
-                StartingDate = products.StartingDate,
+                StartingDate = today,
                 EndingDate = products.EndingDate,
                 Status = products.Status,
                 SellerId = user.UserId,
-                Image = imagePath,
-                Video = videoPath,
-                Users = user
-
+                Image = image,
             };
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
-
+            var imageUrl = $"{httpContextAccessor.HttpContext.Request.Scheme}://{httpContextAccessor.HttpContext.Request.Host}/images/{image}";
             return CreatedAtAction("GetProducts", new { id = product.ProductId }, product);
         }
-        private async Task<string> SaveFile(IFormFile file) 
-        { 
-            if (file == null || file.Length == 0) 
-                return null; 
-            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads"); 
-            if (!Directory.Exists(uploadsFolder)) 
-                Directory.CreateDirectory(uploadsFolder); 
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName); 
-            var filePath = Path.Combine(uploadsFolder, fileName); 
-            using (var stream = new FileStream(filePath, FileMode.Create)) 
-            { 
-                await file.CopyToAsync(stream); 
-            } 
-            return Path.Combine("uploads", fileName); 
 
-        } 
-
+        // DELETE: api/Products/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducts(int id)
         {

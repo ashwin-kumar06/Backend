@@ -45,17 +45,15 @@ namespace Backend.Controllers
                 return NotFound("Invalid Email or Password");
             }
             var tokenString = GenerateJwtToken(user);
-            return Ok(new { tokenString });
+            return Ok(new { tokenString,user.UserId });
         }
 
         private string GenerateJwtToken(Users user)
         {
             var claims = new[]
             {
-                new Claim("user_id","123"),
-                new Claim(ClaimTypes.Role,"admin"),
-                new Claim("permission","read"),
-                new Claim("permission","write")
+                new Claim("user_id", user.UserId.ToString()),
+                new Claim(ClaimTypes.Role,"user"),
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();

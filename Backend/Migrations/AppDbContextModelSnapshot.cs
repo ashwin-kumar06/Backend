@@ -33,6 +33,9 @@ namespace Backend.Migrations
                     b.Property<int>("BidAmount")
                         .HasColumnType("int");
 
+                    b.Property<string>("BidStatus")
+                        .HasColumnType("longtext");
+
                     b.Property<int>("BidderId")
                         .HasColumnType("int");
 
@@ -67,6 +70,9 @@ namespace Backend.Migrations
 
                     b.Property<long>("MobileNumber")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -116,9 +122,6 @@ namespace Backend.Migrations
                     b.Property<string>("Title")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Video")
-                        .HasColumnType("longtext");
-
                     b.HasKey("ProductId");
 
                     b.HasIndex("SellerId");
@@ -135,7 +138,6 @@ namespace Backend.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("UserId"));
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Password")

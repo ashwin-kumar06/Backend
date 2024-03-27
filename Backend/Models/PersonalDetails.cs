@@ -7,6 +7,7 @@ namespace Backend.Models
     {
         [Key]
         public int PersonId { get; set; }
+        public string? Name { get; set; }
         public long MobileNumber { get; set; }
         public string? Aadhar { get; set; }
         public string? Address { get; set; }
