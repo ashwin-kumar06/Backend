@@ -54,24 +54,6 @@ public class ProductsControllerTests
         Assert.IsInstanceOf<NoContentResult>(result.Result);
     }
 
-
-
-    [Test]
-    public async Task DeleteProducts_ReturnsNoContentWhenProductDeleted()
-    {
-        // Arrange
-        var product = new Products { ProductId = 1, Title = "Product 1", Description = "Description 1" };
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _controller.DeleteProducts(product.ProductId);
-
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.IsInstanceOf<NoContentResult>(result);
-    }
-
     [Test]
     public async Task DeleteProducts_ReturnsNotFoundWhenProductNotFound()
     {

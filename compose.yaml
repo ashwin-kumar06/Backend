@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  webapi:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    build:
+      context: .
+      dockerfile: Dockerfile.webapi
+    ports:
+      - "5010:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - mysql
+
+  reactjs:
+    image: node:14
+    build:
+      context: .
+      dockerfile: Dockerfile.reactjs
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://webapi:80
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=online_auction
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+    ports:
+      - "6703:3306"
