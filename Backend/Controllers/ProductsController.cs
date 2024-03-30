@@ -37,15 +37,21 @@ namespace Backend.Controllers
             {
                 return NotFound();
             }
-            return products;
+            return Ok(products);
         }
 
         // GET: api/Products
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Products>>> GetProducts()
         {
-            return await _context.Products.ToListAsync();
+            var products = await _context.Products.ToListAsync();
+            if (products == null || products.Count == 0)
+            {
+                return NoContent();
+            }
+            return products;
         }
+
 
         [HttpGet("{id}/Image")]
         public IActionResult GetImage(int id)

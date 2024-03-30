@@ -3,11 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Data;
 using Backend.Models;
 using Microsoft.AspNetCore.Http;
-
 using System;
-
 using System.IO;
-
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
